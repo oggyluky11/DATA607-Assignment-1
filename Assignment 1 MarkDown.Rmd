@@ -1,0 +1,76 @@
+---
+title: "DATA 607 Assignment 1"
+author: "Fan Xu"
+date: "9/1/2019"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Assignment 1 - Loading Data into a Data Frame
+
+Data set: Mushroom Data Set
+
+Origin: Mushroom records drawn from The Audubon Society Field Guide to North American Mushrooms (1981). G. H. Lincoff (Pres.), New York: Alfred A. Knopf 
+Donor: Jeff Schlimmer (Jeffrey.Schlimmer '@' a.gp.cs.cmu.edu)
+
+Information: This data set includes descriptions of hypothetical samples corresponding to 23 species of gilled mushrooms in the Agaricus and Lepiota Family (pp. 500-525). Each species is identified as definitely edible, definitely poisonous, or of unknown edibility and not recommended. This latter class was combined with the poisonous one. The Guide clearly states that there is no simple rule for determining the edibility of a mushroom; no rule like ``leaflets three, let it be'' for Poisonous Oak and Ivy.
+
+Task: Your task is to study the dataset and the associated description of the data (i.e. “data dictionary”). You may need
+to look around a bit, but it’s there! You should take the data, and create a data frame with a subset of the columns
+in the dataset. You should include the column that indicates edible or poisonous and three or four other columns.
+You should also add meaningful column names and replace the abbreviations used in the data—for example, in the
+appropriate column, “e” might become “edible.” Your deliverable is the R code to perform these transformation
+tasks.
+
+
+
+## 1. Read Mushroom Data Set
+Read data from Github.
+```{r Mushroom_Data}
+Mushroom_data <- read.csv("https://raw.githubusercontent.com/oggyluky11/DATA607-Assignment-1/master/agaricus-lepiota.data")
+head(Mushroom_data)
+dim(Mushroom_data)
+```
+
+
+## 2.  create a data frame with a subset of the columns in the dataset.
+The subset includes  the column that indicates edible or poisonous and three other columns of which the attributes are surface related. 
+```{r task_Data}
+task_data <- data.frame(Mushroom_data["p"],Mushroom_data["s"],Mushroom_data["s.1"],Mushroom_data["s.2"])
+head(task_data)
+dim(task_data)
+```
+
+
+## 3.  Rename the columns and replace abbreviations used in the data.
+```{r task_Data_Renamed}
+names(task_data) = c("classification","cap-surface","stalk-surface-above-ring", "stalk-surface-below-ring")
+Classification <- data.frame("Abbr" = c("e","p"),"Name" = c("edible","poisonous"))
+Surface <- data.frame("Abbr" = c("f","g","y","s","k"),"Name" = c("fibrous","grooves","scaly","smooth","silky"))
+task_data[1] <- Classification$Name[match(unlist(task_data[1]),Classification$Abbr)]
+task_data[c(2,3,4)] <- Surface$Name[match(unlist(task_data[c(2,3,4)]),Surface$Abbr)]
+task_data[c(2,3,4)] <- lapply(task_data[c(2,3,4)], factor)
+head(task_data)
+dim(task_data)
+```
+
+
+## Final Deliverable Data
+```{r Final_Data}
+str(task_data)
+summary(task_data)
+```
+
+
+## Obervation on Data
+The pivot table on the data shows that it is not very effective to tell whether a mushroom is edible or poisonous based on obervation on surface because the odds are not significant. However, the data hints that if surface is silky then the mushroom is very likely to be a poisonous one.   
+```{r Pivot Table}
+library(rpivotTable)
+library(reshape2)
+Unpivot_data <- melt(task_data, id.vars = "classification", variable.name = "surface_type", value.name = "surface_value")
+rpivotTable(Unpivot_data, rows=c("surface_type","surface_value"), cols="classification", rendererName = "Table Barchart", width = "10px", height="300px")
